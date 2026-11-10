@@ -109,7 +109,8 @@ function requestHelper(command, timeout = 7000) {
 function send(message) {
   if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
 }
-function feedback(context, success) {
+function feedback(context, success, enabled = true) {
+  if (!enabled) return;
   send({ event: success ? 'showOk' : 'showAlert', context });
 }
 
@@ -118,13 +119,15 @@ async function handleKeyDown(event) {
   const settings = event.payload?.settings || cachedSettings.get(context) || {};
   const exe = String(settings.exe || '').trim();
   const title = String(settings.title || '').trim();
-  if (!exe) { feedback(context, false); return; }
+  // Existing keys retain their previous confirmation behavior by default.
+  const showConfirmation = settings.showConfirmation !== false;
+  if (!exe) { feedback(context, false, showConfirmation); return; }
   try {
     const reply = await requestHelper({ op: 'focus', exe, title });
-    feedback(context, reply.ok === true);
+    feedback(context, reply.ok === true, showConfirmation);
     if (!reply.ok) log('Could not focus ' + exe + ': ' + (reply.reason || 'unknown'));
   } catch (error) {
-    feedback(context, false);
+    feedback(context, false, showConfirmation);
     log(error.message);
   }
 }

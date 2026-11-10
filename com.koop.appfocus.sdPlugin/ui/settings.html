@@ -17,6 +17,8 @@
   .foot { margin-top: 13px; font-size: 12px; }
   #status { margin-top: 8px; font-size: 12px; min-height: 15px; }
   .ok { color: #9bcaa8; } .warn { color: #efb788; }
+  .toggle-row { display: flex; align-items: center; gap: 8px; margin: 15px 0 6px; cursor: pointer; }
+  .toggle-row input[type="checkbox"] { width: 17px; height: 17px; margin: 0; flex: none; accent-color: #69cbb7; }
 </style>
 </head>
 <body>
@@ -32,19 +34,29 @@
   <input id="title" placeholder="e.g. Spectera" autocomplete="off" spellcheck="false" />
   <small>Leave blank to focus the front-most matching window. Use this to distinguish windows sharing one executable, such as Chrome.</small>
 
+  <label class="toggle-row" for="showConfirmation">
+    <input id="showConfirmation" type="checkbox" checked />
+    <span>Show button confirmation</span>
+  </label>
+  <small>On: show a checkmark on success or an error indicator on failure. Off: show neither.</small>
+
   <div id="status" aria-live="polite"></div>
-  <p class="foot">Only focuses an existing window. Never launches the target application. If the app is closed or Windows blocks activation, the key displays an alert.</p>
+  <p class="foot">Only focuses an existing window. Never launches the target application. When confirmation is off, focus errors are still logged but no key alert is shown.</p>
 
 <script>
 'use strict';
-let socket, uuid, action, settings = { exe: '', title: '' };
+let socket, uuid, action, settings = { exe: '', title: '', showConfirmation: true };
 const $ = id => document.getElementById(id);
 const stateText = (str, warn = false) => { $('status').textContent = str; $('status').className = warn ? 'warn' : 'ok'; };
 const emit = command => { if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(command)); };
 
 function save() {
   if (!uuid || !action) return;
-  settings = { exe: $('exe').value.trim(), title: $('title').value.trim() };
+  settings = {
+    exe: $('exe').value.trim(),
+    title: $('title').value.trim(),
+    showConfirmation: $('showConfirmation').checked
+  };
   emit({ event: 'setSettings', context: uuid, action, payload: settings });
   stateText(settings.exe ? 'Saved. This key will focus ' + settings.exe + '.' : 'Choose an application.', !settings.exe);
 }
@@ -79,9 +91,10 @@ window.connectElgatoStreamDeckSocket = (port, context, registrationEvent, appInf
   try {
     const info = JSON.parse(actionInfo);
     action = info.action;
-    settings = Object.assign({ exe: '', title: '' }, info.payload?.settings || {});
+    settings = Object.assign({ exe: '', title: '', showConfirmation: true }, info.payload?.settings || {});
     $('exe').value = settings.exe;
     $('title').value = settings.title;
+    $('showConfirmation').checked = settings.showConfirmation !== false;
   } catch (error) { stateText('Could not load settings: ' + error.message, true); }
   socket = new WebSocket('ws://127.0.0.1:' + port);
   socket.onopen = () => {
@@ -96,6 +109,7 @@ window.connectElgatoStreamDeckSocket = (port, context, registrationEvent, appInf
       else fillWindows(event.payload.windows || []);
     } else if (event.event === 'didReceiveSettings') {
       settings = Object.assign({}, settings, event.payload?.settings || {});
+      $('showConfirmation').checked = settings.showConfirmation !== false;
     }
   };
   socket.onerror = () => stateText('Stream Deck connection failed.', true);
@@ -109,6 +123,7 @@ $('choice').addEventListener('change', event => {
 });
 $('exe').addEventListener('change', save);
 $('title').addEventListener('change', save);
+$('showConfirmation').addEventListener('change', save);
 </script>
 </body>
 </html>
