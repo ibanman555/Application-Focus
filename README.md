@@ -2,7 +2,7 @@
 
 > **TEST BUILD — NOT YET CONFIRMED WORKING ON WINDOWS/STREAM DECK.** This project is in the test phase until the maintainer confirms successful installation and real-world application focusing. Do not consider v1.0 production-ready or depend on it during a live show until tested.
 
-A Windows-only Stream Deck plugin for **focusing an application that is ALREADY RUNNING** — similar to Bome MIDI Translator Pro's *Outgoing Application Focus* action.
+A Windows-only Stream Deck plugin for **focusing an application that is ALREADY RUNNING** — without starting the target program.
 
 ## The one job this plugin does
 
@@ -10,7 +10,7 @@ When you press the Stream Deck key, it searches for an **existing, visible, top-
 
 **It NEVER launches, starts, reopens, or restarts the target program.** If the target is closed, has no focusable window, or Windows denies focus, the plugin shows an alert instead. This is deliberately **not** Stream Deck's built-in **Open Application** action, which may start an application.
 
-It is intended for users who keep multiple programs running and need a single button to switch focus without sending a MIDI message to Bome. Examples include Wireless Workbench, SuperRack Performer, LiveTrax, and other desktop programs.
+It is intended for users who keep multiple programs running and need a single button to switch focus without additional automation software. Examples include Wireless Workbench, SuperRack Performer, LiveTrax, and other desktop programs.
 
 ## Test-phase status
 
@@ -43,7 +43,7 @@ Please **confirm whether these tests work** before this project is marked stable
 
 ## How it works
 
-The plugin communicates with Stream Deck's local plugin WebSocket and uses a hidden, persistent Windows PowerShell helper to **enumerate and focus existing Win32 windows**. It uses Win32 window-management APIs (`EnumWindows`, `ShowWindowAsync`, `SetForegroundWindow`, and related calls) and may fall back to `WScript.Shell.AppActivate` against an existing process ID. The PowerShell helper itself is started by Stream Deck; **the selected target application is never started**. No Bome, MIDI routing, third-party plugins, or separately configured scripts are required.
+The plugin communicates with Stream Deck's local plugin WebSocket and uses a hidden, persistent Windows PowerShell helper to **enumerate and focus existing Win32 windows**. It uses Win32 window-management APIs (`EnumWindows`, `ShowWindowAsync`, `SetForegroundWindow`, and related calls) and may fall back to `WScript.Shell.AppActivate` against an existing process ID. The PowerShell helper itself is started by Stream Deck; **the selected target application is never started**. No MIDI routing, third-party plugins, or separately configured scripts are required.
 
 Windows foreground-focus restrictions may prevent an activation. Elevated apps may also be inaccessible depending on permissions. No app can be made focusable if it has no top-level window.
 
@@ -51,6 +51,3 @@ Windows foreground-focus restrictions may prevent an activation. Elevated apps m
 
 See the `com.koop.appfocus.sdPlugin/` folder for the manifest, JavaScript plugin backend, PowerShell Windows helper, property-inspector UI, and icons. The packaged test build contains the same files. To package changes locally, see the official [Stream Deck CLI instructions](https://docs.elgato.com/streamdeck/cli/commands/pack/).
 
-## Relationship to Bome MIDI Translator Pro
-
-Bome MIDI Translator Pro's [Outgoing Application Focus](https://download.bome.com/manuals/miditranslator_manual.pdf) action focuses an already-running named application. **That is the specific behavior this project attempts to reproduce.** Unlike Bome, this plugin does not act on MIDI events or offer Bome's full automation system. Until confirmed working, Bome remains the known working option.

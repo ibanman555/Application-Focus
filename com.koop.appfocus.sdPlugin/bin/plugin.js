@@ -3,7 +3,7 @@
 // Stream Deck Application Focus — Windows only, with zero target-app launching.
 // Uses the official Stream Deck local WebSocket protocol and a persistent, hidden
 // Windows PowerShell helper for top-level window enumeration and Win32 activation.
-// Requires no npm packages, Bome, MIDI routing, or user-defined scripts.
+// Requires no npm packages, MIDI routing, or user-defined scripts.
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
