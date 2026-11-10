@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Focus Existing Application</title>
+<style>
+  :root { color-scheme: dark; font: 13px system-ui, -apple-system, Segoe UI, sans-serif; }
+  body { margin: 0; padding: 14px; color: #eee; background: transparent; }
+  label { display: block; font-weight: 600; margin: 12px 0 5px; }
+  input, select, button { box-sizing: border-box; font: inherit; border-radius: 4px; }
+  input, select { background: #292929; color: #f5f5f5; border: 1px solid #555; padding: 7px 8px; width: 100%; }
+  button { color: #fff; background: #365f74; border: 1px solid #487f95; padding: 7px 10px; cursor: pointer; }
+  button:hover { background: #427b96; }
+  small, p { color: #bdbdbd; line-height: 1.35; }
+  p { margin: 8px 0; }
+  .foot { margin-top: 13px; font-size: 12px; }
+  #status { margin-top: 8px; font-size: 12px; min-height: 15px; }
+  .ok { color: #9bcaa8; } .warn { color: #efb788; }
+</style>
+</head>
+<body>
+  <label for="choice">Choose an open application</label>
+  <select id="choice"><option value="">Loading open windows…</option></select>
+  <p><button id="refresh" type="button">↻ Refresh list</button></p>
+
+  <label for="exe">Application (.exe filename)</label>
+  <input id="exe" placeholder="e.g. Wireless Workbench.exe" autocomplete="off" spellcheck="false" />
+  <small>Can use * and ? wildcards, like Bome. Match is case-insensitive.</small>
+
+  <label for="title">Window title contains (optional)</label>
+  <input id="title" placeholder="e.g. Spectera" autocomplete="off" spellcheck="false" />
+  <small>Leave blank to focus the front-most matching window. Use this to distinguish windows sharing one executable, such as Chrome.</small>
+
+  <div id="status" aria-live="polite"></div>
+  <p class="foot">Only focuses an existing window. Never launches the target application. If the app is closed or Windows blocks activation, the key displays an alert.</p>
+
+<script>
+'use strict';
+let socket, uuid, action, settings = { exe: '', title: '' };
+const $ = id => document.getElementById(id);
+const stateText = (str, warn = false) => { $('status').textContent = str; $('status').className = warn ? 'warn' : 'ok'; };
+const emit = command => { if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(command)); };
+
+function save() {
+  if (!uuid || !action) return;
+  settings = { exe: $('exe').value.trim(), title: $('title').value.trim() };
+  emit({ event: 'setSettings', context: uuid, action, payload: settings });
+  stateText(settings.exe ? 'Saved. This key will focus ' + settings.exe + '.' : 'Choose an application.', !settings.exe);
+}
+function fillWindows(windows) {
+  const select = $('choice');
+  const seen = new Set();
+  select.textContent = '';
+  const prompt = document.createElement('option');
+  prompt.value = ''; prompt.textContent = 'Select a running application…'; select.appendChild(prompt);
+  for (const win of windows) {
+    if (!win.exe) continue;
+    const exe = String(win.exe);
+    if (seen.has(exe.toLowerCase())) continue;
+    seen.add(exe.toLowerCase());
+    const item = document.createElement('option');
+    item.value = exe;
+    item.textContent = exe + (win.title ? ' — ' + String(win.title).slice(0, 65) : '');
+    select.appendChild(item);
+  }
+  if (settings.exe && [...select.options].some(o => o.value.toLowerCase() === settings.exe.toLowerCase()))
+    select.value = [...select.options].find(o => o.value.toLowerCase() === settings.exe.toLowerCase()).value;
+  stateText(seen.size + ' running applications found.');
+}
+function refresh() {
+  if (!socket || socket.readyState !== WebSocket.OPEN) return;
+  stateText('Looking for visible application windows…');
+  emit({ event: 'sendToPlugin', action, context: uuid, payload: { command: 'listWindows' } });
+}
+
+window.connectElgatoStreamDeckSocket = (port, context, registrationEvent, appInfo, actionInfo) => {
+  uuid = context;
+  try {
+    const info = JSON.parse(actionInfo);
+    action = info.action;
+    settings = Object.assign({ exe: '', title: '' }, info.payload?.settings || {});
+    $('exe').value = settings.exe;
+    $('title').value = settings.title;
+  } catch (error) { stateText('Could not load settings: ' + error.message, true); }
+  socket = new WebSocket('ws://127.0.0.1:' + port);
+  socket.onopen = () => {
+    emit({ event: registrationEvent, uuid });
+    refresh();
+  };
+  socket.onmessage = message => {
+    let event;
+    try { event = JSON.parse(message.data); } catch { return; }
+    if (event.event === 'sendToPropertyInspector' && event.payload?.event === 'windowList') {
+      if (event.payload.error) stateText(event.payload.error, true);
+      else fillWindows(event.payload.windows || []);
+    } else if (event.event === 'didReceiveSettings') {
+      settings = Object.assign({}, settings, event.payload?.settings || {});
+    }
+  };
+  socket.onerror = () => stateText('Stream Deck connection failed.', true);
+};
+$('refresh').addEventListener('click', refresh);
+$('choice').addEventListener('change', event => {
+  if (!event.target.value) return;
+  $('exe').value = event.target.value;
+  $('title').value = ''; // default focuses any visible window of this application
+  save();
+});
+$('exe').addEventListener('change', save);
+$('title').addEventListener('change', save);
+</script>
+</body>
+</html>
