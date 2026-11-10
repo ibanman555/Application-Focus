@@ -3,7 +3,7 @@
   "Name": "Application Focus",
   "Description": "Focus a window of an application that's already running. Never launches the target app.",
   "Author": "Koop",
-  "Version": "1.0.0.0",
+  "Version": "1.0.1.0",
   "UUID": "com.koop.appfocus",
   "Icon": "imgs/plugin",
   "CodePath": "bin/plugin.js",
@@ -39,5 +39,6 @@
         }
       ]
     }
-  ]
+  ],
+  "CategoryIcon": "imgs/category"
 }

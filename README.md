@@ -16,13 +16,17 @@ It is intended for users who keep multiple programs running and need a single bu
 
 - **Status:** experimental / awaiting user confirmation.
 - **Host platform:** Windows 10/11, Stream Deck 7.1+ (intended; not independently confirmed on hardware).
-- **Known:** source and installer archive have been assembled. **Not yet verified** to successfully install, discover running windows, or reliably bring windows forward on a Windows/Stream Deck system.
-- **Version:** v1.0 test build. No stable release is claimed.
+- **Known:** source and installer archive have been assembled. **Not yet verified** to install or focus windows on Windows hardware. v1.0.1 corrects the invalid icon dimensions of the initial test installer.
+- **Version:** v1.0.1 test build. No stable release is claimed.
 - **Safety:** test on non-critical windows, not in a live-show workflow, until confirmed.
+
+## Test build history
+
+- **v1.0.1 (November 10, 2026):** Corrected Elgato-required image sizes, added the 28/56px category icon, and incremented the version following an installer failure. This build is **not yet confirmed** to install or focus windows.
 
 ## Install the test build
 
-1. Download [`Application_Focus_for_Stream_Deck_v1.0.streamDeckPlugin`](Application_Focus_for_Stream_Deck_v1.0.streamDeckPlugin) from this repository.
+1. Download [`Application_Focus_for_Stream_Deck_v1.0.1.streamDeckPlugin`](Application_Focus_for_Stream_Deck_v1.0.1.streamDeckPlugin) from this repository.
 2. On a Windows computer with Stream Deck installed, double-click the downloaded `.streamDeckPlugin` installer.
 3. In Stream Deck, locate **Application Focus → Focus Existing App** and drag it onto a key.
 4. Select the button and choose an application from **Choose an open application**, or type its executable filename manually (for example, `Wireless Workbench.exe`).
