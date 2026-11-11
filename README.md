@@ -4,7 +4,7 @@ Bring an **already-running application** to the foreground with a Stream Deck bu
 
 ## Installation
 
-1. [Download the plugin](Application_Focus_for_Stream_Deck_v1.0.2.streamDeckPlugin).
+1. [Download the plugin](Application_Focus_for_Stream_Deck_v1.0.3.streamDeckPlugin).
 2. Double-click the downloaded `.streamDeckPlugin` file to install.
 3. Add **Application Focus → Focus Existing App** to a Stream Deck button.
 
